@@ -1,0 +1,32 @@
+[project]
+name = "drasdic"
+version = "0.1.0"
+description = "Domain Randomization for Animal Sound Detection In-Context"
+readme = "README.md"
+requires-python = ">=3.11"
+
+dependencies = [
+  "librosa==0.10.2.post1",
+  "numpy==1.26.4",
+  "pandas==2.2.2",
+  "PyYAML==6.0.1",
+  "torch==2.2.2",
+  "torchaudio==2.2.2",
+  "tqdm==4.66.4",
+  "bitsandbytes==0.43.1",
+  "einops==0.8.0",
+  "matplotlib==3.10.0",
+  "mir_eval==0.7",
+  "scipy==1.13.1",
+  "torchvision==0.17.2",
+  "x_transformers==1.30.1"
+]
+
+
+[tool.setuptools]
+packages = ["drasdic"]
+
+[tool.uv.workspace]
+members = [
+    "drasdic_api",
+]
