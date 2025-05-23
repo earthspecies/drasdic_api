@@ -27,6 +27,7 @@ class InferenceInterface:
         # the 'long' mode is a list (ensemble) created by centering a window on each event.
         self.cached_support = []         # For load_support()
         self.pos_label = None
+        self.min_support_vox_dur = np.infty
 
     def load_support(self, support_audio, support_selection_table, pos_label="POS"):
         """
@@ -45,7 +46,9 @@ class InferenceInterface:
         # Convert selection table to frame-level labels.
         support_labels = selection_table_to_frame_labels(st, total_duration, sr, max_len=total_duration)
         support_labels = support_labels[:len(support_audio)] # in case audio is too short
-        self.args['min_support_vox_dur'] = get_min_duration(st, max_len = total_duration)
+
+        mindur = get_min_duration(st, max_len = total_duration)
+        self.min_support_vox_dur = min(self.min_support_vox_dur, mindur) # update min support vox dur
         
         support_audio = support_audio.unsqueeze(0).to(self.device)
         support_labels = support_labels.unsqueeze(0).to(self.device)
@@ -75,7 +78,8 @@ class InferenceInterface:
                                                     len(support_audio) / sr,
                                                     sr)
 
-        self.args['min_support_vox_dur'] = get_min_duration(st)
+        mindur = get_min_duration(st)
+        self.min_support_vox_dur = min(self.min_support_vox_dur, mindur) # update min support vox dur
         # Create a binary mask for positive regions.
         pos_np = (full_labels == 2).cpu().numpy().astype(bool)
         # Detect start and end indices of positive regions.
@@ -174,18 +178,19 @@ class InferenceInterface:
         ensemble_logits = torch.stack(ensemble_logits, dim=0).mean(dim=0)
         return ensemble_logits
 
-    def _postprocess_logits(self, logits, min_support_vox_dur):
+    def _postprocess_logits(self, logits):
         """
         Postprocess logits exactly as in the evaluation code.
         """
         preds = logits >= 0
-        max_hole = min(min_support_vox_dur * 0.5, 1)
+        max_hole = min(self.min_support_vox_dur * 0.5, 1)
         max_hole_samples = int((max_hole * self.args['sr']) // self.model.downsample_factor)
         preds = fill_holes(preds, max_hole_samples)
-        min_pos = min(min_support_vox_dur * 0.5, 0.5)
+        min_pos = min(self.min_support_vox_dur * 0.5, 0.5)
         min_pos_samples = int((min_pos * self.args['sr']) // self.model.downsample_factor)
         preds = delete_short(preds, min_pos_samples)
-        return preds
+        confs = torch.sigmoid(logits)
+        return preds, confs
 
     def predict(self, query_audio, query_starttime=0, batch_size=1):
         """
@@ -208,13 +213,21 @@ class InferenceInterface:
             raise ValueError("Support not loaded. Call load_support() or load_support_long() first.")
         support_prompts = self.cached_support
         ensemble_logits = self._get_ensemble_logits_for_query(query_dl, support_prompts)
-        min_support_vox_dur = self.args.get('min_support_vox_dur', 0.1)
-        preds = self._postprocess_logits(ensemble_logits, min_support_vox_dur)
+        preds, confs = self._postprocess_logits(ensemble_logits)
         selection_table = frames_to_st_dict(preds.to(torch.int) * 2,
                                      sr=sr // self.model.downsample_factor)
+        
+        selection_table = pd.DataFrame(selection_table)
+        probs = []
+        for i, row in selection_table.iterrows(): # add in confidences post-hoc
+            startsample = int((sr // self.model.downsample_factor) * row["Begin Time (s)"])
+            endsample = int((sr // self.model.downsample_factor) * row["End Time (s)"])
+            avg_conf = float(torch.mean(confs[startsample:endsample]))
+            probs.append(avg_conf)
+        selection_table["Probability"] = pd.Series(probs)
+        
         # Adjust the time shift by iterating over the keys that hold time values.
         for key in ["Begin Time (s)", "End Time (s)"]:
-            selection_table[key] = [t + query_starttime for t in selection_table[key]]
-        selection_table = pd.DataFrame(selection_table)
+            selection_table[key] += query_starttime
         selection_table["Annotation"] = selection_table["Annotation"].map(lambda x : self.pos_label if x=="POS" else x)
         return selection_table
