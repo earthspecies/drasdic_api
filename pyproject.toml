@@ -16,7 +16,6 @@ dependencies = [
   "bitsandbytes==0.43.1",
   "einops==0.8.0",
   "matplotlib==3.10.0",
-  "mir_eval==0.7",
   "scipy==1.13.1",
   "torchvision==0.17.2",
   "x_transformers==1.30.1"
