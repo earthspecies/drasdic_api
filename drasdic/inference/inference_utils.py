@@ -134,3 +134,42 @@ def load_audio(fp, target_sr=16000):
         audio = torch.mean(audio, dim=0)
 
     return audio
+
+
+import numpy as np
+
+
+def nms(
+    st: pd.DataFrame,
+    iou_thresh: float = 0.8,
+) -> pd.DataFrame:
+    """
+    Applies non-maximal suppression to selection table
+
+    st: pd dataframe selection table
+    iou_thresh: threshold of overlap over which to do nms
+
+    Returns
+    -------
+        selection table with nms applied
+    """
+    st = st.sort_values("Probability", ascending = False).reset_index(drop=True).copy()
+
+    st["Remove"] = False
+    st["Duration"] = st["End Time (s)"] - st["Begin Time (s)"]
+
+    for i, row in st.iterrows():
+        if row["Remove"]:
+            continue
+        xx1 = np.maximum(row["Begin Time (s)"], st["Begin Time (s)"].values)
+        xx2 = np.minimum(row["End Time (s)"], st["End Time (s)"].values)
+        inter = np.maximum(0.0, xx2-xx1)
+        ovr = np.divide(inter, (row["Duration"] + st["Duration"].values - inter))
+        ovr = pd.Series(ovr)
+        remove = (ovr>=iou_thresh) & (st.index > i)
+        st["Remove"] = remove | st["Remove"]
+        st_sorted = st.sort_values("Begin Time (s)", ascending = True).reset_index(drop=True)
+
+    st = st[~st["Remove"]].sort_values("Begin Time (s)", ascending = True).reset_index(drop=True).copy()
+
+    return st

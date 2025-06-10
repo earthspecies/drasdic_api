@@ -1,7 +1,7 @@
 import pandas as pd
 from drasdic.models.model import get_model
 from drasdic.inference.interface import InferenceInterface
-from drasdic.inference.inference_utils import load_audio
+from drasdic.inference.inference_utils import load_audio, nms
 
 config_fp = 'weights/args.yaml'
 audio_fp = '20160907_Twin1_marmoset1.wav'
@@ -28,7 +28,7 @@ query_st = selection_table[selection_table["End Time (s)"] > support_dur_sec]
 # Prompt model and infer selection table
 print("Inference using single support")
 interface.load_support(support_audio, support_st, pos_label=pos_label)
-predicted_st = interface.predict(query_audio, query_starttime=support_dur_sec, batch_size=1)
+predicted_st = interface.predict(query_audio, query_starttime=support_dur_sec, batch_size=1, threshold = 0.5)
 print(predicted_st)
 
 
@@ -54,5 +54,5 @@ query_st = selection_table[selection_table["End Time (s)"] > support_dur_sec]
 print("Inference using multiple support")
 interface.load_support_long(support_audio, support_st, pos_label=pos_label)
 interface.subsample_support_clips(3)
-predicted_st = interface.predict(query_audio, query_starttime=support_dur_sec, batch_size=1)
+predicted_st = interface.predict(query_audio, query_starttime=support_dur_sec, batch_size=1, threshold = 0.5)
 print(predicted_st)

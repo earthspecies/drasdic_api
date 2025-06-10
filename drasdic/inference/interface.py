@@ -178,30 +178,21 @@ class InferenceInterface:
         ensemble_logits = torch.stack(ensemble_logits, dim=0).mean(dim=0)
         return ensemble_logits
 
-    def _postprocess_logits(self, logits):
+    def _postprocess_logits(self, logits, threshold = 0.5):
         """
         Postprocess logits exactly as in the evaluation code.
         """
-        preds = logits >= 0
+        confs = torch.sigmoid(logits)
+        preds = confs >= threshold
         max_hole = min(self.min_support_vox_dur * 0.5, 1)
         max_hole_samples = int((max_hole * self.args['sr']) // self.model.downsample_factor)
         preds = fill_holes(preds, max_hole_samples)
         min_pos = min(self.min_support_vox_dur * 0.5, 0.5)
         min_pos_samples = int((min_pos * self.args['sr']) // self.model.downsample_factor)
         preds = delete_short(preds, min_pos_samples)
-        confs = torch.sigmoid(logits)
         return preds, confs
-
-    def predict(self, query_audio, query_starttime=0, batch_size=1):
-        """
-        Predict on an arbitrarily long query recording using a sliding window approach.
-        The windows use 50% overlap, and the logits from all windows
-        are aggregated to form the final prediction.
-
-        query_audio: 1D tensor containing the full query recording.  Expects sampling rate of 16kHz.
-        query_starttime: Time offset to add, default = 0.
-        batch_size: batch size to use for inference, default = 1.
-        """
+    
+    def predict_logits(self, query_audio, batch_size=1):
         sr = self.args['sr']
         window_len_sec = self.args.get("window_len_sec", 10)
         window_size = int(window_len_sec * sr)
@@ -213,7 +204,11 @@ class InferenceInterface:
             raise ValueError("Support not loaded. Call load_support() or load_support_long() first.")
         support_prompts = self.cached_support
         ensemble_logits = self._get_ensemble_logits_for_query(query_dl, support_prompts)
-        preds, confs = self._postprocess_logits(ensemble_logits)
+        return ensemble_logits
+
+    def logits_to_selection_table(self, logits, query_starttime=0, threshold = 0.5):
+        sr = self.args['sr']
+        preds, confs = self._postprocess_logits(logits, threshold = threshold)
         selection_table = frames_to_st_dict(preds.to(torch.int) * 2,
                                      sr=sr // self.model.downsample_factor)
         
@@ -231,3 +226,19 @@ class InferenceInterface:
             selection_table[key] += query_starttime
         selection_table["Annotation"] = selection_table["Annotation"].map(lambda x : self.pos_label if x=="POS" else x)
         return selection_table
+
+    def predict(self, query_audio, query_starttime=0, batch_size=1, threshold=0.5):
+        """
+        Predict on an arbitrarily long query recording using a sliding window approach.
+        The windows use 50% overlap, and the logits from all windows
+        are aggregated to form the final prediction.
+
+        query_audio: 1D tensor containing the full query recording.  Expects sampling rate of 16kHz.
+        query_starttime: Time offset to add, default = 0.
+        batch_size: batch size to use for inference, default = 1.
+        threshold: probability threshold over which to count detections
+        """
+        logits = self.predict_logits(query_audio, batch_size=batch_size)
+        st = self.logits_to_selection_table(logits, query_starttime=query_starttime, threshold = threshold)
+        return st
+        
