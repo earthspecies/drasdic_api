@@ -1,3 +1,7 @@
+"""
+Utils for working with raven selection tables
+"""
+
 from typing import Dict, List, Union
 
 import numpy as np
