@@ -65,7 +65,7 @@ See the [colab demo](https://colab.research.google.com/drive/1Ztsf1W08feC_CoVIqJ
 
 For full details, see documentation in `drasdic/inference/interface.py`.
 
-# Evaluation: Fewshot Animal Sound Detection 13 (FASD13)
+# Dataset: Fewshot Animal Sound Detection 13 (FASD13)
 
 [Obtain the dataset here!](https://zenodo.org/records/15843741)
 
