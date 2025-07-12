@@ -2,8 +2,8 @@
 integration test: interface
 """
 
+import librosa
 import pandas as pd
-import torchaudio
 
 from drasdic.inference.inference_utils import load_audio
 from drasdic.inference.interface import InferenceInterface
@@ -14,12 +14,12 @@ def main() -> None:
     audio_fp = "tests/integration/test_audio.wav"
     st_fp = "tests/integration/test_st.txt"
     pos_label = "POS"
-    torchaudio.set_audio_backend(backend="sox_io")
 
     interface = InferenceInterface(config_fp)
 
     # Load audios
     sr = 16000
+    librosa.get_duration(audio_fp)  # to make checks happy; not used
     audio = load_audio(audio_fp, target_sr=sr)
     support_dur_sec = 30
     support_audio = audio[: int(support_dur_sec * sr)]
