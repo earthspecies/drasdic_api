@@ -14,33 +14,53 @@ This is the public repo for DRASDIC: Domain Randomization for Animal Sound Detec
 
 ## Setup
 
-We manage packages with `uv`. In particular, requirements are in `pyproject.toml`
+We manage packages with `uv`. To install with `uv`, do:
+
+`uv pip install -e .`
+
+Obtain the [model weights](https://storage.googleapis.com/esp-public-files/drasdic_api_demo/weights/drasdic_weights.pt) and place them in the `weights` folder.
 
 # Inference API
 
-Download model and cfg file:
+## Example usage:
 
 ```
-mkdir weights; cd weights
-gsutil -m cp \
-  "gs://fewshot/drasdic_weights/main_model/random_9/args.yaml" \
-  "gs://fewshot/drasdic_weights/main_model/random_9/model_80000.pt" \
-  .
-cd ..
+from drasdic.inference.interface import InferenceInterface
+from drasdic.inference.inference_utils import load_audio
+import pandas as pd
+
+# Initialize interface
+interface = InferenceInterface('weights/drasdic_args.yaml')
+
+# Load labeled and unlabeled audio
+labeled_audio = load_audio(LABELED_AUDIO_FP)
+unlabeled_audio = load_audio(UNLABELED_AUDIO_FP)
+
+# Load selection table for labeled audio
+# Interface assumes the loaded selection table has columns "Begin Time (s)", "End Time (s)", and "Annotation"
+st = pd.read_csv(LABELED_AUDIO_ST_FP, sep='\t')
+
+# Load support audio and compute features
+# This generates one thirty-second prompt per POS event in the support audio
+# Inference time scales linearly with the number of prompts
+interface.load_support_long(labeled_audio, st, pos_label="POS")
+
+# Subsample support audio prompts to reduce inference time (if desired)
+interface.subsample_support_clips(5)
+
+# Predict frame-based logits for unlabeled audio
+logits = interface.predict_logits(unlabeled_audio, batch_size=8)
+
+# Convert logits to selection table
+predicted_st = interface.logits_to_selection_table(logits, threshold = 0.5)
+print(predicted_st)
 ```
 
-In `args.yaml`, change `previous_checkpoint_fp` from `null` to `/absolute/path/to/weights/model_80000.pt`.
+## Further details
 
-Download example audio file and selection table:
+See the [colab demo](https://colab.research.google.com/drive/1Ztsf1W08feC_CoVIqJIFi0bwe3p5PICK?usp=sharing) for inference with multiple label types and files.
 
-```
-gsutil -m cp \
-  "gs://fewshot/evaluation/formatted/marmoset/selection_tables/20160907_Twin1_marmoset1.txt" \
-  "gs://fewshot/evaluation/formatted/marmoset/audio/20160907_Twin1_marmoset1.wav" \
-  .
-```
-
-For example usage, see `uv run demo.py`. For API details, see `drasdic/inference/interface.py`.
+For full details, see documentation in `drasdic/inference/interface.py`.
 
 # Evaluation: Fewshot Animal Sound Detection 13 (FASD13)
 
