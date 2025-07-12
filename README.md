@@ -1,13 +1,14 @@
 # DRASDIC
 
-This is the public repo for DRASDIC: Domain Randomization for Animal Sound Detection in Context. 
+This is the public repo for DRASDIC: Domain Randomization for Animal Sound Detection in Context.
 
 ## Quick links:
 
-- Preprint (LINK TO COME)
+- Paper (LINK TO COME)
 - [Appendix](https://github.com/user-attachments/files/21130954/appendix_7_8.pdf)
-- Model weights (LINK TO COME)
+- [Model weights](https://storage.googleapis.com/esp-public-files/drasdic_api_demo/weights/drasdic_weights.pt)
 - [Fewshot Animal Sound Detection 13 (FASD13) evaluation dataset](https://zenodo.org/records/15843741)
+- [Colab Demo](https://colab.research.google.com/drive/1Ztsf1W08feC_CoVIqJIFi0bwe3p5PICK?usp=sharing)
 
 ![figures_v1 003(1)](https://github.com/user-attachments/assets/f8cac62a-4721-4383-bac2-3a10dafb87b1)
 
@@ -17,7 +18,7 @@ We manage packages with `uv`. In particular, requirements are in `pyproject.toml
 
 # Inference API
 
-Download model and cfg file: 
+Download model and cfg file:
 
 ```
 mkdir weights; cd weights
@@ -55,7 +56,7 @@ A collection of public FSBSED datasets was previously provided in [Nolasco et al
 
 We follow the data format in [Nolasco et al., 2023](https://www.sciencedirect.com/science/article/pii/S157495412300287X): Each audio file comes with annotations of the onsets and offsets of positive sound events, i.e. sounds coming from a predetermined category (such as a species label or call type). An N-shot detection system is provided with the audio up through the Nth positive event, and must predict the onsets and offsets of positive events in the rest of the recording. Evaluation of N-shot detection systems is described in loc. cit.
 
-**FASD13 Summary** 
+**FASD13 Summary**
 
 | Dataset | Full Name       | N files | Dur (hr) | N events | Recording type | Location            | Taxa                                           | Detection target        |
 |---------|------------------|---------|----------|----------|----------------|---------------------|------------------------------------------------|--------------------------|
