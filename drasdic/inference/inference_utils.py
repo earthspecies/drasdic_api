@@ -79,9 +79,9 @@ def fill_holes(m: torch.Tensor, max_hole: int) -> torch.Tensor:
     Examples
     --------
     >>> import torch
-    >>> m = torch.tensor([True, True, False, False, True, True, False, True, False, False, False, True])
-    >>> fill_holes(m.clone(), max_hole=3)
-    tensor([ True,  True,  True,  True,  True,  True,  True,  True, False, False, False,  True])
+    >>> m = torch.tensor([True, False, True, False, False, True])
+    >>> fill_holes(m.clone(), max_hole=2)
+    tensor([ True,  True,  True, False, False,  True])
     """
     stops = (m[:-1] & ~m[1:]).nonzero(as_tuple=True)[0]  # indices where holes start
 
