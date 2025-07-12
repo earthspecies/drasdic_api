@@ -3,6 +3,7 @@ integration test: interface
 """
 
 import pandas as pd
+import torchaudio
 
 from drasdic.inference.inference_utils import load_audio
 from drasdic.inference.interface import InferenceInterface
@@ -12,7 +13,8 @@ def main() -> None:
     config_fp = "tests/integration/args_integration_test.yaml"
     audio_fp = "tests/integration/test_audio.wav"
     st_fp = "tests/integration/test_st.txt"
-    pos_label = "Phee"
+    pos_label = "POS"
+    torchaudio.set_audio_backend(backend="sox_io")
 
     interface = InferenceInterface(config_fp)
 
