@@ -2,6 +2,8 @@
 
 This is the public repo for DRASDIC: Domain Randomization for Animal Sound Detection in Context.
 
+**Authors**: Benjamin Hoffman, David Robinson, Marius Miron, Vittorio Baglione, Daniela Canestrari, Damian Elias, Eva Trapote, Felix Effenberger, Maddie Cusimano, Masato Hagiwara, Olivier Pietquin
+
 ## Quick links:
 
 - Paper (LINK TO COME)
@@ -37,7 +39,8 @@ labeled_audio = load_audio(LABELED_AUDIO_FP)
 unlabeled_audio = load_audio(UNLABELED_AUDIO_FP)
 
 # Load selection table for labeled audio
-# Interface assumes the loaded selection table has columns "Begin Time (s)", "End Time (s)", and "Annotation"
+# Interface assumes the loaded selection table has columns:
+# "Begin Time (s)", "End Time (s)", and "Annotation"
 st = pd.read_csv(LABELED_AUDIO_ST_FP, sep='\t')
 
 # Load support audio and compute features
