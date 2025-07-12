@@ -2,7 +2,6 @@
 integration test: interface
 """
 
-import librosa
 import pandas as pd
 
 from drasdic.inference.inference_utils import load_audio
@@ -19,7 +18,6 @@ def main() -> None:
 
     # Load audios
     sr = 16000
-    librosa.get_duration(audio_fp)  # to make checks happy; not used
     audio = load_audio(audio_fp, target_sr=sr)
     support_dur_sec = 30
     support_audio = audio[: int(support_dur_sec * sr)]

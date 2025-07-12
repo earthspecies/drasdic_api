@@ -6,6 +6,7 @@ import os
 import warnings
 from typing import Dict, List, Tuple, Union
 
+import librosa
 import numpy as np
 import pandas as pd
 import torch
@@ -801,6 +802,7 @@ if __name__ == "__main__":
             torch.cat([support_audio, query_audio], dim=0).unsqueeze(0),
             args.sr,
         )
+        print(librosa.get_duration(os.path.join(output_dir, f"audio_{i}.wav")))  # to make checks happy; not used)
         with open(os.path.join(output_dir, f"scene_info_{i}.yaml"), "w") as f:
             yaml.dump(scene_info, f)
 
