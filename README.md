@@ -10,7 +10,9 @@ This is the public repo for DRASDIC: Domain Randomization for Animal Sound Detec
 - [Appendix](https://github.com/user-attachments/files/21130954/appendix_7_8.pdf)
 - [Model weights](https://storage.googleapis.com/esp-public-files/drasdic_api_demo/weights/drasdic_weights.pt)
 - [Fewshot Animal Sound Detection 13 (FASD13) evaluation dataset](https://zenodo.org/records/15843741)
+- [Example Data (Train+FASD13)](https://anonymous-demo-13.github.io/drasdic-demo/)
 - [Colab Demo](https://colab.research.google.com/drive/1Ztsf1W08feC_CoVIqJIFi0bwe3p5PICK?usp=sharing)
+
 
 ![figures_v1 003(1)](https://github.com/user-attachments/assets/f8cac62a-4721-4383-bac2-3a10dafb87b1)
 
